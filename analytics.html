@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spendly - Analytics</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+          rel="stylesheet">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #f9f9f7;
+            color: #1a1c1b;
+            padding-bottom: 90px;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: rgba(249, 249, 247, 0.96);
+            padding: 18px 20px;
+            border-bottom: 1px solid #eeeeec;
+        }
+
+        .brand {
+            color: #163428;
+            font-size: 23px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #727974;
+            font-size: 13px;
+            margin-top: 3px;
+        }
+
+        main {
+            max-width: 850px;
+            margin: auto;
+            padding: 20px 16px;
+        }
+
+        .page-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+
+        .eyebrow {
+            color: #43664d;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            color: #163428;
+            font-size: 25px;
+            margin-top: 5px;
+        }
+
+        h2 {
+            color: #163428;
+            font-size: 18px;
+            margin-bottom: 6px;
+        }
+
+        .date-label {
+            color: #43664d;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 18px;
+            box-shadow: 0 2px 10px rgba(22, 52, 40, 0.04);
+            margin-bottom: 18px;
+        }
+
+        .metric-label {
+            color: #727974;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .metric-value {
+            color: #163428;
+            font-size: 22px;
+            font-weight: 700;
+            margin-top: 10px;
+            overflow-wrap: anywhere;
+        }
+
+        .metric-note {
+            color: #43664d;
+            font-size: 11px;
+            margin-top: 7px;
+        }
+
+        .section-description {
+            color: #727974;
+            font-size: 12px;
+            margin-bottom: 18px;
+        }
+
+        .chart-container {
+            width: 100%;
+            max-width: 300px;
+            margin: 10px auto 18px;
+            position: relative;
+        }
+
+        #donutChart {
+            width: 100%;
+            display: block;
+        }
+
+        .donut-center {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .donut-center span:first-child {
+            color: #727974;
+            font-size: 12px;
+        }
+
+        #donutTotal {
+            color: #163428;
+            font-size: 22px;
+            font-weight: 700;
+            margin-top: 5px;
+            overflow-wrap: anywhere;
+            max-width: 85%;
+        }
+
+        .category-item {
+            padding: 13px;
+            border-radius: 14px;
+            background: #f4f4f2;
+            margin-bottom: 10px;
+        }
+
+        .category-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .category-name {
+            color: #163428;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .category-amount {
+            color: #163428;
+            font-size: 14px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .category-percent {
+            color: #727974;
+            font-size: 11px;
+            margin-top: 6px;
+        }
+
+        .progress-track {
+            height: 7px;
+            background: #e2e3e1;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 9px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s;
+        }
+
+        .insight-box {
+            background: #e4f0e7;
+            border-radius: 18px;
+            padding: 18px;
+            margin-bottom: 18px;
+        }
+
+        .insight-box h2 {
+            margin-bottom: 10px;
+        }
+
+        .insight-box p {
+            font-size: 13px;
+            line-height: 1.7;
+            color: #424844;
+        }
+
+        .transaction-list {
+            margin-top: 15px;
+        }
+
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 13px 0;
+            border-bottom: 1px solid #eeeeec;
+        }
+
+        .transaction-item:last-child {
+            border-bottom: none;
+        }
+
+        .transaction-title {
+            font-weight: 600;
+            font-size: 13px;
+            color: #163428;
+        }
+
+        .transaction-category {
+            font-size: 11px;
+            color: #727974;
+            margin-top: 5px;
+        }
+
+        .income-amount {
+            color: #287447;
+            font-size: 13px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .expense-amount {
+            color: #792c17;
+            font-size: 13px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .empty-message {
+            color: #727974;
+            text-align: center;
+            padding: 22px 8px;
+            font-size: 13px;
+        }
+
+        .error-message {
+            display: none;
+            color: #93000a;
+            background: #ffdad6;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            margin-bottom: 15px;
+        }
+
+        .retry-button {
+            margin-top: 10px;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 15px;
+            background: #163428;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            z-index: 20;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(249, 249, 247, 0.97);
+            border-top: 1px solid #e8e8e6;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 12px 5px;
+        }
+
+        .bottom-nav a {
+            color: #43664d;
+            text-decoration: none;
+            text-align: center;
+            font-size: 10px;
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .bottom-nav a.active {
+            color: #163428;
+        }
+
+        .bottom-nav .add-button {
+            background: #163428;
+            color: white;
+            border-radius: 50%;
+            width: 43px;
+            height: 43px;
+            max-width: 43px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 25px;
+            flex: none;
+        }
+
+        @media (max-width: 380px) {
+            main {
+                padding: 16px 12px;
+            }
+
+            .card {
+                padding: 14px;
+            }
+
+            .metric-value {
+                font-size: 19px;
+            }
+
+            h1 {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <div class="brand">Spendly</div>
+    <div class="subtitle">Your personal finance companion</div>
+</header>
+
+<main>
+
+    <div class="page-heading">
+        <div>
+            <div class="eyebrow">Performance Snapshot</div>
+            <h1>Financial Insights</h1>
+        </div>
+
+        <div class="date-label" id="currentDate"></div>
+    </div>
+
+    <div id="errorMessage" class="error-message">
+        Unable to load your transactions.
+        <br>
+        Please check your Java server and log in again.
+        <br>
+        <button class="retry-button" onclick="loadAnalytics()">
+            Try Again
+        </button>
+    </div>
+
+    <!-- Summary Cards -->
+
+    <section class="metrics">
+
+        <div class="card">
+            <div class="metric-label">Total Spent</div>
+            <div class="metric-value" id="totalSpent">₹0</div>
+            <div class="metric-note">Your recorded expenses</div>
+        </div>
+
+        <div class="card">
+            <div class="metric-label">Total Earned</div>
+            <div class="metric-value" id="totalEarned">₹0</div>
+            <div class="metric-note">Your recorded income</div>
+        </div>
+
+        <div class="card">
+            <div class="metric-label">Daily Average</div>
+            <div class="metric-value" id="dailyAverage">₹0</div>
+            <div class="metric-note">Average expenses per day this month</div>
+        </div>
+
+        <div class="card">
+            <div class="metric-label">Remaining Balance</div>
+            <div class="metric-value" id="balance">₹0</div>
+            <div class="metric-note">Income minus expenses</div>
+        </div>
+
+    </section>
+
+    <!-- Category Distribution -->
+
+    <section class="card">
+
+        <h2>Category Distribution</h2>
+
+        <p class="section-description">
+            See how your recorded expenses are distributed.
+        </p>
+
+        <div class="chart-container">
+
+            <svg id="donutChart"
+                 viewBox="0 0 120 120"
+                 aria-label="Expense distribution donut chart">
+
+                <circle
+                    cx="60"
+                    cy="60"
+                    r="48"
+                    fill="none"
+                    stroke="#f4f4f2"
+                    stroke-width="12">
+                </circle>
+
+            </svg>
+
+            <div class="donut-center">
+                <span>Total Spent</span>
+                <span id="donutTotal">₹0</span>
+            </div>
+
+        </div>
+
+        <div id="categoryList">
+            <p class="empty-message">Loading categories...</p>
+        </div>
+
+    </section>
+
+    <!-- Spending Insight -->
+
+    <section class="insight-box">
+
+        <h2>💡 Spending Insight</h2>
+
+        <p id="spendingInsight">
+            Your spending insights will appear here after your transactions load.
+        </p>
+
+    </section>
+
+    <!-- Recent Transactions -->
+
+    <section class="card">
+
+        <h2>Recent Transactions</h2>
+
+        <p class="section-description">
+            Your latest recorded transactions.
+        </p>
+
+        <div id="recentTransactions" class="transaction-list">
+            <p class="empty-message">Loading transactions...</p>
+        </div>
+
+    </section>
+
+</main>
+
+<!-- Bottom Navigation -->
+
+<nav class="bottom-nav">
+
+    <a href="dashboard.html">
+        <div>⌂</div>
+        Home
+    </a>
+
+    <a href="transaction_history.html">
+        <div>▤</div>
+        History
+    </a>
+
+    <a href="add_transaction.html" class="add-button" aria-label="Add transaction">
+        +
+    </a>
+
+    <a href="analytics.html" class="active">
+        <div>▥</div>
+        Insights
+    </a>
+
+    <a href="budgets.html">
+        <div>◉</div>
+        Budgets
+    </a>
+
+    <a href="profile.html">
+        <div>○</div>
+        Profile
+    </a>
+
+</nav>
+
+<script>
+"use strict";
+
+// Check login
+const token = sessionStorage.getItem("authToken");
+
+if (!token) {
+    window.location.replace("login.html");
+}
+
+// Supported expense categories
+const categories = [
+    "Food",
+    "Transportation",
+    "Shopping",
+    "Education",
+    "Fun",
+    "Bills",
+    "Health",
+    "Care",
+    "Subs",
+    "Other"
+];
+
+// Chart colors
+const colors = [
+    "#792c17",
+    "#2d4b3e",
+    "#43664d",
+    "#adcebd",
+    "#c1c8c3",
+    "#5b1604",
+    "#163428",
+    "#727974",
+    "#99baa9",
+    "#b08968"
+];
+
+// Format Indian currency
+function formatMoney(amount) {
+    return "₹" + Number(amount || 0).toLocaleString("en-IN", {
+        maximumFractionDigits: 2
+    });
+}
+
+// Normalize category names
+function normalizeCategory(value) {
+    const name = String(value || "Other")
+        .trim()
+        .toLowerCase();
+
+    const match = categories.find(
+        category => category.toLowerCase() === name
+    );
+
+    return match || "Other";
+}
+
+// Normalize transaction type
+function normalizeType(value) {
+    return String(value || "")
+        .trim()
+        .toLowerCase();
+}
+
+// Display category amounts and progress bars
+function displayCategories(categoryTotals) {
+    const categoryList = document.getElementById("categoryList");
+
+    const total = Object.values(categoryTotals)
+        .reduce((sum, amount) => sum + amount, 0);
+
+    categoryList.innerHTML = "";
+
+    categories.forEach((category, index) => {
+        const amount = categoryTotals[category] || 0;
+
+        const percentage = total > 0
+            ? (amount / total) * 100
+            : 0;
+
+        const item = document.createElement("div");
+        item.className = "category-item";
+
+        const row = document.createElement("div");
+        row.className = "category-row";
+
+        const name = document.createElement("span");
+        name.className = "category-name";
+        name.textContent = category;
+
+        const value = document.createElement("span");
+        value.className = "category-amount";
+        value.textContent = formatMoney(amount);
+
+        row.appendChild(name);
+        row.appendChild(value);
+
+        const percent = document.createElement("div");
+        percent.className = "category-percent";
+        percent.textContent = percentage.toFixed(1) + "% of total expenses";
+
+        const track = document.createElement("div");
+        track.className = "progress-track";
+
+        const bar = document.createElement("div");
+        bar.className = "progress-bar";
+        bar.style.width = percentage + "%";
+        bar.style.backgroundColor = colors[index];
+
+        track.appendChild(bar);
+
+        item.appendChild(row);
+        item.appendChild(percent);
+        item.appendChild(track);
+
+        categoryList.appendChild(item);
+    });
+}
+
+// Update donut chart using real category amounts
+function updateDonutChart(categoryTotals) {
+    const chart = document.getElementById("donutChart");
+    const totalElement = document.getElementById("donutTotal");
+
+    chart.querySelectorAll(".donut-segment").forEach(segment => {
+        segment.remove();
+    });
+
+    const entries = categories
+        .map(category => ({
+            category: category,
+            amount: categoryTotals[category] || 0
+        }))
+        .filter(item => item.amount > 0);
+
+    const total = entries.reduce(
+        (sum, item) => sum + item.amount,
+        0
+    );
+
+    totalElement.textContent = formatMoney(total);
+
+    if (total <= 0) {
+        return;
+    }
+
+    const circumference = 2 * Math.PI * 48;
+    let offset = 0;
+
+    entries.forEach(item => {
+        const segmentLength =
+            (item.amount / total) * circumference;
+
+        const circle = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "circle"
+        );
+
+        circle.setAttribute("cx", "60");
+        circle.setAttribute("cy", "60");
+        circle.setAttribute("r", "48");
+        circle.setAttribute("fill", "none");
+        circle.setAttribute(
+            "stroke",
+            colors[categories.indexOf(item.category)]
+        );
+
+        circle.setAttribute(
+            "stroke-dasharray",
+            `${segmentLength} ${circumference - segmentLength}`
+        );
+
+        circle.setAttribute("stroke-dashoffset", -offset);
+        circle.setAttribute("stroke-width", "12");
+        circle.setAttribute("class", "donut-segment");
+
+        chart.appendChild(circle);
+
+        offset += segmentLength;
+    });
+}
+
+// Display recent transactions
+function displayRecentTransactions(transactions) {
+    const container = document.getElementById("recentTransactions");
+
+    container.innerHTML = "";
+
+    if (transactions.length === 0) {
+        container.innerHTML =
+            '<p class="empty-message">No transactions recorded yet.</p>';
+        return;
+    }
+
+    // Display latest returned records first
+    const recent = [...transactions].reverse().slice(0, 5);
+
+    recent.forEach(transaction => {
+        const type = normalizeType(transaction.type);
+        const isIncome = type === "income";
+
+        const item = document.createElement("div");
+        item.className = "transaction-item";
+
+        const details = document.createElement("div");
+
+        const title = document.createElement("div");
+        title.className = "transaction-title";
+        title.textContent = transaction.title || "Transaction";
+
+        const category = document.createElement("div");
+        category.className = "transaction-category";
+        category.textContent =
+            normalizeCategory(transaction.category);
+
+        details.appendChild(title);
+        details.appendChild(category);
+
+        const amount = document.createElement("div");
+        amount.className = isIncome
+            ? "income-amount"
+            : "expense-amount";
+
+        amount.textContent =
+            (isIncome ? "+" : "-") +
+            formatMoney(transaction.amount);
+
+        item.appendChild(details);
+        item.appendChild(amount);
+
+        container.appendChild(item);
+    });
+}
+
+// Update spending insight
+function updateInsight(categoryTotals, totalExpenses, totalIncome) {
+    const insight = document.getElementById("spendingInsight");
+
+    if (totalExpenses === 0 && totalIncome === 0) {
+        insight.textContent =
+            "Add your income and expenses to see your financial insights.";
+        return;
+    }
+
+    const highestCategory = categories
+        .map(category => ({
+            category: category,
+            amount: categoryTotals[category] || 0
+        }))
+        .sort((a, b) => b.amount - a.amount)[0];
+
+    let message = "";
+
+    if (totalExpenses > 0 && highestCategory.amount > 0) {
+        message =
+            "Your highest spending category is " +
+            highestCategory.category +
+            ", with " + formatMoney(highestCategory.amount) +
+            " in recorded expenses. ";
+    } else {
+        message = "You have not recorded any expenses yet. ";
+    }
+
+    const balance = totalIncome - totalExpenses;
+
+    if (balance > 0) {
+        message +=
+            "Your recorded income exceeds your expenses by " +
+            formatMoney(balance) + ".";
+    } else if (balance < 0) {
+        message +=
+            "Your recorded expenses exceed your income by " +
+            formatMoney(Math.abs(balance)) + ".";
+    } else {
+        message +=
+            "Your recorded income and expenses are currently equal.";
+    }
+
+    insight.textContent = message;
+}
+
+// Load analytics from Java backend
+async function loadAnalytics() {
+    if (!token) {
+        return;
+    }
+
+    const errorMessage = document.getElementById("errorMessage");
+    errorMessage.style.display = "none";
+
+    try {
+        const response = await fetch(
+            "http://localhost:8080/transactions",
+            {
+                method: "GET",
+                headers: {
+                    "Authorization": "Bearer " + token
+                }
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(
+                "Server returned status " + response.status
+            );
+        }
+
+        const result = await response.json();
+
+        const transactions = Array.isArray(result)
+            ? result
+            : result.transactions || [];
+
+        let totalIncome = 0;
+        let totalExpenses = 0;
+
+        const categoryTotals = {};
+
+        categories.forEach(category => {
+            categoryTotals[category] = 0;
+        });
+
+        transactions.forEach(transaction => {
+            const amount = Number(transaction.amount) || 0;
+            const type = normalizeType(transaction.type);
+
+            if (type === "income") {
+                totalIncome += amount;
+            } else if (type === "expense") {
+                totalExpenses += amount;
+
+                const category =
+                    normalizeCategory(transaction.category);
+
+                categoryTotals[category] += amount;
+            }
+        });
+
+        const balance = totalIncome - totalExpenses;
+
+        // Summary cards
+        document.getElementById("totalSpent").textContent =
+            formatMoney(totalExpenses);
+
+        document.getElementById("totalEarned").textContent =
+            formatMoney(totalIncome);
+
+        document.getElementById("balance").textContent =
+            formatMoney(balance);
+
+        // Calculate average based on current calendar day
+        const today = new Date();
+        const dayOfMonth = today.getDate();
+
+        document.getElementById("dailyAverage").textContent =
+            formatMoney(totalExpenses / dayOfMonth);
+
+        document.getElementById("currentDate").textContent =
+            today.toLocaleDateString("en-IN", {
+                month: "short",
+                year: "numeric"
+            });
+
+        // Category list and donut chart
+        displayCategories(categoryTotals);
+        updateDonutChart(categoryTotals);
+
+        // Insight and recent transactions
+        updateInsight(
+            categoryTotals,
+            totalExpenses,
+            totalIncome
+        );
+
+        displayRecentTransactions(transactions);
+
+        console.log("Analytics loaded successfully.");
+        console.log("Total income:", totalIncome);
+        console.log("Total expenses:", totalExpenses);
+        console.log("Category totals:", categoryTotals);
+
+    } catch (error) {
+        console.error("Analytics error:", error);
+        errorMessage.style.display = "block";
+    }
+}
+
+loadAnalytics();
+</script>
+
+</body>
+</html>

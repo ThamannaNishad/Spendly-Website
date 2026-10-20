@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spendly - Add Transaction</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Material+Symbols+Outlined" rel="stylesheet">
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        primary: "#163428",
+        secondary: "#43664d",
+        background: "#f9f9f7",
+        surface: "#ffffff"
+      }
+    }
+  }
+};
+</script>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Plus Jakarta Sans", Arial, sans-serif;
+  background: #f9f9f7;
+  color: #1a1c1b;
+}
+
+header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(249,249,247,0.96);
+  padding: 16px;
+  border-bottom: 1px solid #e8e8e6;
+}
+
+.container {
+  max-width: 600px;
+  margin: auto;
+  padding: 20px 16px 40px;
+}
+
+.card {
+  background: white;
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 10px #00000008;
+}
+
+.type-buttons {
+  display: flex;
+  gap: 10px;
+  background: #eeeeec;
+  padding: 5px;
+  border-radius: 14px;
+  margin-bottom: 22px;
+}
+
+.type-buttons button {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  background: transparent;
+  color: #424844;
+}
+
+.type-buttons button.active {
+  background: #163428;
+  color: white;
+}
+
+.amount-box {
+  background: #f4f4f2;
+  padding: 24px 12px;
+  border-radius: 20px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.amount-box label {
+  display: block;
+  margin-bottom: 12px;
+  color: #727974;
+}
+
+.amount-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+}
+
+.amount-row span {
+  font-size: 30px;
+  font-weight: bold;
+}
+
+#amount-input {
+  width: 70%;
+  max-width: 260px;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 34px;
+  font-weight: bold;
+  text-align: center;
+  color: #163428;
+}
+
+.quick-amounts {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.quick-amounts button {
+  border: none;
+  border-radius: 20px;
+  padding: 9px 13px;
+  background: white;
+  color: #245b46;
+  cursor: pointer;
+}
+
+.section-title {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 20px 0 12px;
+}
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.cat-btn {
+  border: none;
+  border-radius: 13px;
+  padding: 12px 3px;
+  background: #f4f4f2;
+  color: #424844;
+  cursor: pointer;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.cat-btn .material-symbols-outlined {
+  display: block;
+  font-size: 23px;
+  margin-bottom: 6px;
+}
+
+.cat-btn.active {
+  background: #163428;
+  color: white;
+}
+
+label.field-label {
+  display: block;
+  margin: 18px 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+input[type="text"],
+input[type="date"],
+select {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  background: #f4f4f2;
+  font: inherit;
+  outline-color: #163428;
+}
+
+.save-button {
+  width: 100%;
+  padding: 16px;
+  background: #14532d;
+  color: white;
+  border: none;
+  border-radius: 15px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 22px;
+}
+
+.save-button:hover {
+  background: #0b3d20;
+}
+
+.save-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.back-link {
+  color: #245b46;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+#status-message {
+  display: none;
+  padding: 13px;
+  margin-top: 15px;
+  border-radius: 10px;
+  overflow-wrap: anywhere;
+}
+
+#status-message.success {
+  display: block;
+  color: #14532d;
+  background: #dcfce7;
+}
+
+#status-message.error {
+  display: block;
+  color: #991b1b;
+  background: #fee2e2;
+}
+
+@media (max-width: 400px) {
+  .category-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  #amount-input {
+    font-size: 29px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div style="max-width:600px;margin:auto;display:flex;align-items:center;justify-content:space-between;">
+    <a class="back-link" href="dashboard.html">← Back</a>
+    <strong style="font-size:20px;color:#163428;">Spendly</strong>
+    <span style="font-size:14px;">Quick Add</span>
+  </div>
+</header>
+
+<main class="container">
+
+  <div class="card">
+
+    <h2 style="font-size:23px;font-weight:700;margin:0 0 20px;">
+      New Transaction
+    </h2>
+
+    <div class="type-buttons">
+      <button type="button" id="tab-expense" class="active"
+        onclick="switchType('Expense')">
+        ↓ Expense
+      </button>
+
+      <button type="button" id="tab-income"
+        onclick="switchType('Income')">
+        ↑ Income
+      </button>
+    </div>
+
+    <div class="amount-box">
+      <label for="amount-input">Enter Amount</label>
+
+      <div class="amount-row">
+        <span>₹</span>
+        <input
+          id="amount-input"
+          type="text"
+          inputmode="decimal"
+          value=""
+          placeholder="0.00"
+          autocomplete="off">
+      </div>
+
+      <div class="quick-amounts">
+        <button type="button" onclick="addAmount(50)">+₹50</button>
+        <button type="button" onclick="addAmount(100)">+₹100</button>
+        <button type="button" onclick="addAmount(500)">+₹500</button>
+        <button type="button" onclick="addAmount(1000)">+₹1,000</button>
+      </div>
+    </div>
+
+    <h3 class="section-title">Choose Category</h3>
+
+    <div class="category-grid" id="category-grid">
+
+      <button type="button" class="cat-btn active"
+        onclick="selectCategory(this,'Food & Drinks')">
+        <span class="material-symbols-outlined">restaurant</span>
+        Food
+      </button>
+
+      <button type="button" class="cat-btn"
+        onclick="selectCategory(this,'Transportation')">
+        <span class="material-symbols-outlined">directions_bus</span>
+        Transit
+      </button>
+
+      <button type="button" class="cat-btn"
+        onclick="selectCategory(this,'Shopping')">
+        <span class="material-symbols-outlined">shopping_bag</span>
+        Shopping
+      </button>
+
+      <button type="button" class="cat-btn"
+        onclick="selectCategory(this,'Education')">
+        <span class="material-symbols-outlined">school</span>
+        Education
+      </button>
+
+      <button type="button" class="cat-btn"
+        onclick="selectCategory(this,'Entertainment')">
+        <span class="material-symbols-outlined">sports_esports</span>
+        Fun
+      </button>
+
+      <button type="button" class="cat-btn"
+        onclick="selectCategory(this,'Bills & Utilities')">
+        <span class="material-symbols-outlined">bolt</span>
+        Bills
+      </button>
+
+      <button type="button" class="cat-btn"
+        onclick="selectCategory(this,'Health')">
+        <span class="material-symbols-outlined">favorite</span>
+        Health
+      </button>
+
+      <button type="button" class="cat-btn"
+        onclick="selectCategory(this,'Personal Care')">
+        <span class="material-symbols-outlined">auto_awesome</span>
+        Care
+      </button>
+
+      <button type="button" class="cat-btn"
+        onclick="selectCategory(this,'Subscriptions')">
+        <span class="material-symbols-outlined">schedule</span>
+        Subs
+      </button>
+
+      <button type="button" class="cat-btn"
+        onclick="selectCategory(this,'Other')">
+        <span class="material-symbols-outlined">more_horiz</span>
+        Other
+      </button>
+
+    </div>
+
+    <label class="field-label" for="date-input">Date</label>
+    <input id="date-input" type="date">
+
+    <label class="field-label" for="payment-input">Payment Method</label>
+    <select id="payment-input">
+      <option>UPI</option>
+      <option>Cash</option>
+      <option>Debit Card</option>
+      <option>Credit Card</option>
+      <option>Net Banking</option>
+      <option>Other</option>
+    </select>
+
+    <label class="field-label" for="note-input">Note / Description</label>
+    <input
+      id="note-input"
+      type="text"
+      placeholder="e.g. Lunch at canteen"
+      maxlength="200">
+
+    <button
+      type="button"
+      id="save-button"
+      class="save-button"
+      onclick="saveTransaction()">
+      ✓ Save Transaction
+    </button>
+
+    <div id="status-message" role="status"></div>
+
+  </div>
+
+</main>
+
+<script>
+const API_URL = 'http://localhost:8080';
+
+let transactionType = 'Expense';
+let selectedCategory = 'Food & Drinks';
+
+const token = sessionStorage.getItem('authToken');
+
+// Set today's date.
+document.getElementById('date-input').value =
+  new Date().toISOString().slice(0, 10);
+
+// Require the user to log in.
+if (!token) {
+  alert('Please log in before adding a transaction.');
+  window.location.href = 'login.html';
+}
+
+function switchType(type) {
+  transactionType = type;
+
+  document.getElementById('tab-expense').classList.toggle(
+    'active', type === 'Expense'
+  );
+
+  document.getElementById('tab-income').classList.toggle(
+    'active', type === 'Income'
+  );
+}
+
+function addAmount(value) {
+  const input = document.getElementById('amount-input');
+  const current = Number(input.value) || 0;
+
+  input.value = (current + value).toFixed(2);
+}
+
+function selectCategory(button, category) {
+  selectedCategory = category;
+
+  document.querySelectorAll('.cat-btn').forEach(function(item) {
+    item.classList.remove('active');
+  });
+
+  button.classList.add('active');
+}
+
+function showMessage(message, type) {
+  const status = document.getElementById('status-message');
+
+  status.textContent = message;
+  status.className = type;
+}
+
+async function saveTransaction() {
+  const amountText =
+    document.getElementById('amount-input').value.trim();
+
+  const note =
+    document.getElementById('note-input').value.trim();
+
+  const amount = Number(amountText);
+
+  const saveButton = document.getElementById('save-button');
+
+  if (!sessionStorage.getItem('authToken')) {
+    showMessage('Please log in again.', 'error');
+    return;
+  }
+
+  if (!amountText || !Number.isFinite(amount) || amount <= 0) {
+    showMessage('Please enter a valid amount greater than zero.', 'error');
+    return;
+  }
+
+  if (!note) {
+    showMessage('Please enter a transaction description.', 'error');
+    return;
+  }
+
+  saveButton.disabled = true;
+  saveButton.textContent = 'Saving...';
+
+  try {
+    const currentToken = sessionStorage.getItem('authToken');
+
+    const response = await fetch(API_URL + '/save', {
+      method: 'POST',
+
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+        'Authorization': 'Bearer ' + currentToken
+      },
+
+      body: new URLSearchParams({
+        title: note,
+        amount: amount.toFixed(2),
+        category: selectedCategory,
+        type: transactionType
+      }).toString()
+    });
+
+    const result = await response.text();
+
+    if (response.status === 401) {
+      sessionStorage.clear();
+      showMessage(
+        'Your login session has expired. Please log in again.',
+        'error'
+      );
+
+      setTimeout(function() {
+        window.location.href = 'login.html';
+      }, 1500);
+
+      return;
+    }
+
+    if (!response.ok) {
+      console.error('Server response:', response.status, result);
+
+      showMessage(
+        'Could not save transaction. Server response: ' +
+        response.status + '. ' + result,
+        'error'
+      );
+
+      return;
+    }
+
+    showMessage(
+      'Transaction saved successfully!',
+      'success'
+    );
+
+    // Allow the success message to appear before navigating.
+    setTimeout(function() {
+      window.location.href = 'dashboard.html';
+    }, 1000);
+
+  } catch (error) {
+    console.error('Transaction save error:', error);
+
+    showMessage(
+      'Could not connect to the Java server. Make sure ExpenseServer is running on port 8080.',
+      'error'
+    );
+
+  } finally {
+    saveButton.disabled = false;
+    saveButton.textContent = '✓ Save Transaction';
+  }
+}
+</script>
+
+</body>
+</html>

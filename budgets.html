@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spendly - Budgets & Savings Goals</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: 'Inter', Arial, sans-serif;
+    background: #f9f9f7;
+    color: #1a1c1b;
+    padding-bottom: 90px;
+}
+
+header {
+    position: sticky;
+    top: 0;
+    background: #f9f9f7;
+    padding: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 8px #0000000a;
+    z-index: 10;
+}
+
+header h1 {
+    color: #163428;
+    margin: 0;
+    font-size: 24px;
+}
+
+header a {
+    text-decoration: none;
+    color: #163428;
+}
+
+main {
+    padding: 20px 16px 110px;
+    max-width: 700px;
+    margin: auto;
+}
+
+.tabs {
+    display: flex;
+    gap: 5px;
+    background: #eeeeec;
+    padding: 5px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.tabs button {
+    flex: 1;
+    border: none;
+    border-radius: 9px;
+    padding: 13px 5px;
+    background: transparent;
+    color: #424844;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.tabs button.active {
+    background: white;
+    color: #163428;
+    font-weight: bold;
+}
+
+.card {
+    background: white;
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px #0000000c;
+}
+
+.hero {
+    background: #163428;
+    color: white;
+}
+
+.hero h2 {
+    color: #c8ead8;
+    font-size: 14px;
+}
+
+.amount {
+    font-size: 30px;
+    font-weight: bold;
+    margin: 15px 0;
+    overflow-wrap: anywhere;
+}
+
+.progress {
+    width: 100%;
+    height: 9px;
+    background: #e8e8e6;
+    border-radius: 20px;
+    overflow: hidden;
+    margin: 12px 0;
+}
+
+.progress div {
+    height: 100%;
+    background: #43664d;
+    border-radius: 20px;
+    transition: width 0.3s;
+}
+
+.hero .progress {
+    background: #466557;
+}
+
+.hero .progress div {
+    background: #c5eccc;
+}
+
+.row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.row span {
+    overflow-wrap: anywhere;
+}
+
+.muted {
+    color: #727974;
+    font-size: 13px;
+}
+
+.green {
+    color: #43664d;
+    font-weight: bold;
+}
+
+.red {
+    color: #ba1a1a;
+    font-weight: bold;
+}
+
+.action {
+    background: #163428;
+    color: white;
+    border: none;
+    border-radius: 22px;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.secondary {
+    background: #e4f0e7;
+    color: #163428;
+}
+
+.goal-title {
+    font-size: 17px;
+    font-weight: bold;
+    margin: 0 0 8px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.notice {
+    background: #e4f0e7;
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 13px;
+    line-height: 1.6;
+    margin-bottom: 16px;
+}
+
+.empty {
+    color: #727974;
+    font-size: 13px;
+    text-align: center;
+    padding: 20px 5px;
+}
+
+nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: white;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 10px 3px;
+    box-shadow: 0 -2px 10px #00000015;
+    z-index: 1000;
+}
+
+nav a {
+    flex: 1;
+    text-align: center;
+    text-decoration: none;
+    color: #245b46;
+    font-size: 11px;
+    padding: 5px 0;
+}
+
+nav .icon {
+    display: block;
+    font-size: 21px;
+    margin-bottom: 3px;
+}
+
+@media (max-width: 380px) {
+    nav a {
+        font-size: 10px;
+    }
+
+    .tabs button {
+        font-size: 12px;
+    }
+
+    .card {
+        padding: 14px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>Spendly</h1>
+    <a href="profile.html">👤 Profile</a>
+</header>
+
+<main>
+
+    <div class="tabs">
+        <button id="tab-budgets" class="active"
+                onclick="switchView('budgets')">
+            📊 Monthly Budgets
+        </button>
+
+        <button id="tab-savings"
+                onclick="switchView('savings')">
+            🎯 Savings Goals
+        </button>
+    </div>
+
+    <div id="errorMessage" class="notice hidden"></div>
+
+    <section id="view-budgets">
+
+        <div class="card hero">
+            <h2>MONTHLY INCOME</h2>
+            <div class="amount" id="monthlyIncome">₹0</div>
+            <p class="muted" style="color:#d4e4da">
+                Income recorded this month
+            </p>
+        </div>
+
+        <div class="card hero">
+            <h2>TOTAL MONTHLY BUDGET</h2>
+
+            <div class="amount" id="totalBudget">₹8,000</div>
+
+            <div class="row">
+                <span id="totalSpent">Spent: ₹0</span>
+                <span id="totalRemaining">Remaining: ₹0</span>
+            </div>
+
+            <div class="progress">
+                <div id="overallProgress" style="width:0%"></div>
+            </div>
+
+            <p id="budgetMessage">Loading budget information...</p>
+
+            <button class="action secondary" onclick="editTotalBudget()">
+                Set Monthly Budget
+            </button>
+        </div>
+
+        <div class="card">
+            <h3>Monthly Balance</h3>
+
+            <div class="row">
+                <span class="muted">Income</span>
+                <strong id="balanceIncome">₹0</strong>
+            </div>
+
+            <div class="row" style="margin-top:12px">
+                <span class="muted">Expenses</span>
+                <strong id="balanceExpenses">₹0</strong>
+            </div>
+
+            <div class="row" style="margin-top:12px">
+                <span class="muted">Balance after expenses</span>
+                <strong id="balanceAfterExpenses">₹0</strong>
+            </div>
+        </div>
+
+        <div class="row">
+            <h3>Category Limits</h3>
+
+            <button class="action" onclick="editCategoryBudget()">
+                + Set Limit
+            </button>
+        </div>
+
+        <p class="muted">
+            Spending is calculated from your recorded transactions.
+        </p>
+
+        <div id="budgetList">
+            <p class="empty">Loading category budgets...</p>
+        </div>
+
+    </section>
+
+    <section id="view-savings" class="hidden">
+
+        <h2>Savings Goals 🎯</h2>
+
+        <p class="muted">
+            Create a goal and track how much you have saved.
+        </p>
+
+        <div id="goalList"></div>
+
+        <button class="action" onclick="newGoal()">
+            + Create New Goal
+        </button>
+
+        <p class="muted" style="margin-top:15px">
+            Savings goals are saved in this browser.
+        </p>
+
+    </section>
+
+</main>
+
+<nav>
+    <a href="dashboard.html">
+        <span class="icon">⌂</span>
+        Home
+    </a>
+
+    <a href="transaction_history.html">
+        <span class="icon">▤</span>
+        History
+    </a>
+
+    <a href="add_transaction.html">
+        <span class="icon">＋</span>
+        Add
+    </a>
+
+    <a href="analytics.html">
+        <span class="icon">▥</span>
+        Insights
+    </a>
+
+    <a href="budgets.html">
+        <span class="icon">◉</span>
+        Budgets
+    </a>
+
+    <a href="profile.html">
+        <span class="icon">♙</span>
+        Profile
+    </a>
+</nav>
+
+<script>
+"use strict";
+
+const token = sessionStorage.getItem("authToken");
+
+const categoryNames = [
+    "Food",
+    "Transportation",
+    "Shopping",
+    "Education",
+    "Entertainment",
+    "Bills",
+    "Health",
+    "Care",
+    "Subs",
+    "Other"
+];
+
+const defaultLimits = {
+    Food: 2000,
+    Transportation: 1000,
+    Shopping: 1000,
+    Education: 1500,
+    Entertainment: 500,
+    Bills: 500,
+    Health: 500,
+    Care: 300,
+    Subs: 200,
+    Other: 500
+};
+
+let transactions = [];
+let categorySpent = {};
+let monthlyIncome = 0;
+let monthlySpent = 0;
+
+function storageKey(name) {
+    const userId = sessionStorage.getItem("userId") || "default";
+    return "spendly_" + name + "_" + userId;
+}
+
+function readStorage(name, fallback) {
+    try {
+        const value = localStorage.getItem(storageKey(name));
+        return value !== null ? JSON.parse(value) : fallback;
+    } catch (error) {
+        console.error("Storage error:", error);
+        return fallback;
+    }
+}
+
+function saveStorage(name, value) {
+    localStorage.setItem(storageKey(name), JSON.stringify(value));
+}
+
+let limits = readStorage("budget_limits", defaultLimits);
+let monthlyBudget = Number(readStorage("monthly_budget", 8000));
+let goals = readStorage("savings_goals", []);
+
+function money(value) {
+    return "₹" + Number(value || 0).toLocaleString("en-IN", {
+        maximumFractionDigits: 2
+    });
+}
+
+function normalizeCategory(value) {
+    const name = String(value || "Other").trim().toLowerCase();
+
+    const aliases = {
+        "food & drinks": "Food",
+        "food and drinks": "Food",
+        "transport": "Transportation",
+        "education & supplies": "Education",
+        "fun": "Entertainment",
+        "subscription": "Subs",
+        "subscriptions": "Subs"
+    };
+
+    if (aliases[name]) return aliases[name];
+
+    return categoryNames.find(
+        category => category.toLowerCase() === name
+    ) || "Other";
+}
+
+function switchView(view) {
+    document.getElementById("view-budgets").classList.toggle(
+        "hidden", view !== "budgets"
+    );
+
+    document.getElementById("view-savings").classList.toggle(
+        "hidden", view !== "savings"
+    );
+
+    document.getElementById("tab-budgets").classList.toggle(
+        "active", view === "budgets"
+    );
+
+    document.getElementById("tab-savings").classList.toggle(
+        "active", view === "savings"
+    );
+
+    window.scrollTo(0, 0);
+}
+
+/*
+ * Find a date field if the backend supplies one.
+ */
+function getTransactionDate(transaction) {
+    const rawDate =
+        transaction.date ??
+        transaction.transaction_date ??
+        transaction.transactionDate ??
+        transaction.created_at ??
+        transaction.createdAt;
+
+    if (rawDate === undefined || rawDate === null || rawDate === "") {
+        return null;
+    }
+
+    const parsed = new Date(rawDate);
+
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function isCurrentMonth(transaction) {
+    const date = getTransactionDate(transaction);
+
+    if (!date) {
+        // If the API has no date field, don't hide the transaction.
+        return true;
+    }
+
+    const now = new Date();
+
+    return date.getFullYear() === now.getFullYear() &&
+           date.getMonth() === now.getMonth();
+}
+
+function calculateSpending() {
+    categorySpent = {};
+
+    categoryNames.forEach(category => {
+        categorySpent[category] = 0;
+    });
+
+    monthlyIncome = 0;
+    monthlySpent = 0;
+
+    transactions.forEach(transaction => {
+        if (!isCurrentMonth(transaction)) return;
+
+        const type = String(transaction.type || "")
+            .trim()
+            .toLowerCase();
+
+        const amount = Number(transaction.amount) || 0;
+
+        if (amount < 0) return;
+
+        if (type === "income") {
+            monthlyIncome += amount;
+        } else if (type === "expense") {
+            monthlySpent += amount;
+
+            const category = normalizeCategory(transaction.category);
+            categorySpent[category] += amount;
+        }
+    });
+}
+
+function renderBudgets() {
+    const remaining = monthlyBudget - monthlySpent;
+
+    const percentage = monthlyBudget > 0
+        ? monthlySpent / monthlyBudget * 100
+        : (monthlySpent > 0 ? 100 : 0);
+
+    document.getElementById("monthlyIncome").textContent =
+        money(monthlyIncome);
+
+    document.getElementById("totalBudget").textContent =
+        money(monthlyBudget);
+
+    document.getElementById("totalSpent").textContent =
+        "Spent: " + money(monthlySpent);
+
+    document.getElementById("totalRemaining").textContent =
+        "Remaining: " + money(remaining);
+
+    document.getElementById("overallProgress").style.width =
+        Math.min(percentage, 100) + "%";
+
+    document.getElementById("overallProgress").style.background =
+        percentage > 100 ? "#ba1a1a" : "#c5eccc";
+
+    const message = document.getElementById("budgetMessage");
+
+    if (monthlyBudget <= 0) {
+        message.textContent = "Set a monthly budget to track spending.";
+    } else if (remaining < 0) {
+        message.textContent =
+            "⚠️ You are over budget by " + money(Math.abs(remaining)) + ".";
+    } else {
+        message.textContent =
+            "✅ You have " + money(remaining) + " of your budget remaining.";
+    }
+
+    document.getElementById("balanceIncome").textContent =
+        money(monthlyIncome);
+
+    document.getElementById("balanceExpenses").textContent =
+        money(monthlySpent);
+
+    const actualBalance = monthlyIncome - monthlySpent;
+    const balanceElement = document.getElementById("balanceAfterExpenses");
+
+    balanceElement.textContent = money(actualBalance);
+    balanceElement.className = actualBalance < 0 ? "red" : "green";
+
+    const list = document.getElementById("budgetList");
+    list.innerHTML = "";
+
+    categoryNames.forEach(category => {
+        const spent = categorySpent[category] || 0;
+        const limit = Number(limits[category]) || 0;
+        const left = limit - spent;
+
+        const percent = limit > 0
+            ? spent / limit * 100
+            : (spent > 0 ? 100 : 0);
+
+        const card = document.createElement("div");
+        card.className = "card";
+
+        const row = document.createElement("div");
+        row.className = "row";
+
+        const title = document.createElement("strong");
+        title.textContent = category;
+
+        const status = document.createElement("span");
+
+        if (limit <= 0) {
+            status.className = "muted";
+            status.textContent = "No limit";
+        } else if (percent > 100) {
+            status.className = "red";
+            status.textContent = "Over Budget";
+        } else if (percent >= 80) {
+            status.className = "red";
+            status.textContent = Math.round(percent) + "% Spent";
+        } else {
+            status.className = "green";
+            status.textContent = "On Track";
+        }
+
+        row.appendChild(title);
+        row.appendChild(status);
+
+        const budgetText = document.createElement("p");
+        budgetText.className = "muted";
+        budgetText.textContent = "Budget: " + money(limit);
+
+        const progress = document.createElement("div");
+        progress.className = "progress";
+
+        const bar = document.createElement("div");
+        bar.style.width = Math.min(percent, 100) + "%";
+        bar.style.background = percent > 100
+            ? "#ba1a1a"
+            : percent >= 80 ? "#d97706" : "#43664d";
+
+        progress.appendChild(bar);
+
+        const bottom = document.createElement("div");
+        bottom.className = "row";
+
+        const spentText = document.createElement("span");
+        spentText.className = "muted";
+        spentText.textContent = "Spent: " + money(spent);
+
+        const leftText = document.createElement("span");
+        leftText.className = left < 0 ? "red" : "green";
+        leftText.textContent = left < 0
+            ? money(Math.abs(left)) + " over"
+            : money(left) + " left";
+
+        bottom.appendChild(spentText);
+        bottom.appendChild(leftText);
+
+        const editButton = document.createElement("button");
+        editButton.className = "action secondary";
+        editButton.style.marginTop = "12px";
+        editButton.textContent = "Edit Limit";
+        editButton.onclick = () => editLimit(category);
+
+        card.appendChild(row);
+        card.appendChild(budgetText);
+        card.appendChild(progress);
+        card.appendChild(bottom);
+        card.appendChild(editButton);
+
+        list.appendChild(card);
+    });
+}
+
+function editTotalBudget() {
+    const input = prompt(
+        "Enter your monthly spending budget:",
+        String(monthlyBudget)
+    );
+
+    if (input === null) return;
+
+    const value = Number(input);
+
+    if (!Number.isFinite(value) || value < 0) {
+        alert("Please enter a valid budget.");
+        return;
+    }
+
+    monthlyBudget = value;
+    saveStorage("monthly_budget", monthlyBudget);
+    renderBudgets();
+}
+
+function editLimit(category) {
+    const input = prompt(
+        "Enter the budget limit for " + category + ":",
+        String(limits[category] || 0)
+    );
+
+    if (input === null) return;
+
+    const value = Number(input);
+
+    if (!Number.isFinite(value) || value < 0) {
+        alert("Please enter a valid amount.");
+        return;
+    }
+
+    limits[category] = value;
+    saveStorage("budget_limits", limits);
+    renderBudgets();
+}
+
+function editCategoryBudget() {
+    const category = prompt(
+        "Enter a category:\n" + categoryNames.join(", ")
+    );
+
+    if (category === null || category.trim() === "") return;
+
+    const normalized = normalizeCategory(category);
+
+    if (!categoryNames.includes(normalized)) {
+        alert("Please enter a listed category.");
+        return;
+    }
+
+    editLimit(normalized);
+}
+
+function renderGoals() {
+    const list = document.getElementById("goalList");
+    list.innerHTML = "";
+
+    if (goals.length === 0) {
+        list.innerHTML =
+            '<p class="empty">No savings goals yet. Create your first goal!</p>';
+        return;
+    }
+
+    goals.forEach((goal, index) => {
+        const target = Number(goal.target) || 0;
+        const saved = Number(goal.saved) || 0;
+        const remaining = Math.max(0, target - saved);
+        const percentage = target > 0 ? saved / target * 100 : 0;
+
+        const card = document.createElement("div");
+        card.className = "card";
+
+        const title = document.createElement("h3");
+        title.className = "goal-title";
+        title.textContent = goal.name;
+
+        const targetText = document.createElement("p");
+        targetText.className = "muted";
+        targetText.textContent = "Target: " + money(target);
+
+        const row = document.createElement("div");
+        row.className = "row";
+
+        const savedText = document.createElement("strong");
+        savedText.textContent = money(saved) + " saved";
+
+        const percentText = document.createElement("span");
+        percentText.className = "green";
+        percentText.textContent =
+            Math.min(percentage, 100).toFixed(1) + "%";
+
+        row.appendChild(savedText);
+        row.appendChild(percentText);
+
+        const progress = document.createElement("div");
+        progress.className = "progress";
+
+        const bar = document.createElement("div");
+        bar.style.width = Math.min(percentage, 100) + "%";
+        progress.appendChild(bar);
+
+        const remainingText = document.createElement("p");
+        remainingText.className = "muted";
+        remainingText.textContent = remaining > 0
+            ? money(remaining) + " remaining"
+            : "🎉 Goal completed!";
+
+        const addButton = document.createElement("button");
+        addButton.className = "action";
+        addButton.textContent = "+ Add Money";
+        addButton.disabled = remaining <= 0;
+        addButton.onclick = () => addMoney(index);
+
+        const deleteButton = document.createElement("button");
+        deleteButton.className = "action secondary";
+        deleteButton.style.marginLeft = "6px";
+        deleteButton.textContent = "Delete";
+        deleteButton.onclick = () => deleteGoal(index);
+
+        card.appendChild(title);
+        card.appendChild(targetText);
+        card.appendChild(row);
+        card.appendChild(progress);
+        card.appendChild(remainingText);
+        card.appendChild(addButton);
+        card.appendChild(deleteButton);
+
+        list.appendChild(card);
+    });
+}
+
+function addMoney(index) {
+    const goal = goals[index];
+    const remaining = Number(goal.target) - Number(goal.saved);
+
+    if (remaining <= 0) {
+        alert("Congratulations! Goal completed.");
+        return;
+    }
+
+    const input = prompt(
+        "How much would you like to add? Remaining: " + money(remaining)
+    );
+
+    if (input === null) return;
+
+    const amount = Number(input);
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+        alert("Enter a valid amount.");
+        return;
+    }
+
+    if (amount > remaining) {
+        alert("Amount cannot exceed the remaining goal amount.");
+        return;
+    }
+
+    goals[index].saved = Number(goals[index].saved) + amount;
+    saveStorage("savings_goals", goals);
+    renderGoals();
+}
+
+function newGoal() {
+    const name = prompt("Enter your savings goal name:");
+
+    if (name === null || name.trim() === "") return;
+
+    const input = prompt("Enter your target amount:");
+
+    if (input === null) return;
+
+    const target = Number(input);
+
+    if (!Number.isFinite(target) || target <= 0) {
+        alert("Enter a valid target amount.");
+        return;
+    }
+
+    goals.push({
+        name: name.trim(),
+        target: target,
+        saved: 0
+    });
+
+    saveStorage("savings_goals", goals);
+    renderGoals();
+}
+
+function deleteGoal(index) {
+    if (!confirm("Delete this savings goal?")) return;
+
+    goals.splice(index, 1);
+    saveStorage("savings_goals", goals);
+    renderGoals();
+}
+
+async function loadBudgets() {
+    if (!token) {
+        window.location.replace("login.html");
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            "http://localhost:8080/transactions",
+            {
+                method: "GET",
+                headers: {
+                    "Authorization": "Bearer " + token
+                }
+            }
+        );
+
+        if (response.status === 401 || response.status === 403) {
+            sessionStorage.removeItem("authToken");
+            window.location.replace("login.html");
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error("Server status: " + response.status);
+        }
+
+        const data = await response.json();
+
+        transactions = Array.isArray(data)
+            ? data
+            : Array.isArray(data.transactions)
+                ? data.transactions
+                : [];
+
+        calculateSpending();
+
+        const errorBox = document.getElementById("errorMessage");
+
+        const missingDates = transactions.some(
+            transaction => !getTransactionDate(transaction)
+        );
+
+        if (missingDates && transactions.length > 0) {
+            errorBox.textContent =
+                "Some transactions do not contain a date. Their amounts are included, but monthly totals may include older transactions too.";
+            errorBox.classList.remove("hidden");
+        }
+
+    } catch (error) {
+        console.error("Could not load transactions:", error);
+
+        const errorBox = document.getElementById("errorMessage");
+        errorBox.textContent =
+            "Unable to load transactions. Check that the Java backend is running on port 8080 and log in again if needed.";
+        errorBox.classList.remove("hidden");
+    }
+
+    renderBudgets();
+    renderGoals();
+}
+
+loadBudgets();
+</script>
+
+</body>
+</html>

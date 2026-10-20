@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transaction History - Spendly</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 20px;
+    padding-bottom: 90px;
+    font-family: Arial, sans-serif;
+    background: #f9f9f7;
+    color: #1a1c1b;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+h1 {
+    color: #163428;
+    margin: 0;
+}
+
+.subtitle {
+    color: #727974;
+    margin-top: 6px;
+}
+
+button, select, input {
+    font: inherit;
+}
+
+input, select {
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background: white;
+}
+
+.controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+#search {
+    flex: 1;
+    min-width: 180px;
+}
+
+.filters {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.filter-btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 20px;
+    background: #e8e8e6;
+    cursor: pointer;
+}
+
+.filter-btn.active {
+    background: #163428;
+    color: white;
+}
+
+.summary {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 22px;
+}
+
+.summary-card {
+    flex: 1;
+    padding: 16px;
+    border-radius: 14px;
+    background: white;
+    box-shadow: 0 2px 8px #00000008;
+    min-width: 0;
+}
+
+.summary-card p {
+    color: #727974;
+    margin: 0 0 10px;
+    font-size: 14px;
+}
+
+.summary-card h3 {
+    margin: 0;
+    font-size: 20px;
+    overflow-wrap: anywhere;
+}
+
+.income {
+    color: #287447;
+}
+
+.expense {
+    color: #b42318;
+}
+
+.transaction {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    background: white;
+    padding: 16px;
+    border-radius: 14px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 8px #00000008;
+}
+
+.transaction h3 {
+    margin: 0 0 6px;
+    font-size: 16px;
+    overflow-wrap: anywhere;
+}
+
+.transaction p {
+    margin: 0;
+    color: #727974;
+    font-size: 13px;
+}
+
+.amount {
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+#message {
+    padding: 18px;
+    text-align: center;
+    color: #727974;
+}
+
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: white;
+    padding: 14px 5px;
+    display: flex;
+    justify-content: space-around;
+    box-shadow: 0 -2px 10px #0000000a;
+}
+
+.bottom-nav a {
+    text-decoration: none;
+    color: #43664d;
+    font-size: 13px;
+}
+
+@media (max-width: 450px) {
+    body {
+        padding: 14px;
+        padding-bottom: 85px;
+    }
+
+    .summary-card {
+        padding: 12px;
+    }
+
+    .summary-card h3 {
+        font-size: 16px;
+    }
+
+    .transaction {
+        padding: 12px;
+    }
+
+    .amount {
+        font-size: 14px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div>
+        <h1>Spendly</h1>
+        <p class="subtitle">Transaction History</p>
+    </div>
+</header>
+
+<div class="controls">
+    <input id="search"
+           type="search"
+           placeholder="Search transactions...">
+
+    <select id="sort">
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+        <option value="highest">Highest Amount</option>
+        <option value="lowest">Lowest Amount</option>
+    </select>
+
+    <button id="export"
+            class="filter-btn"
+            type="button">
+        Export CSV
+    </button>
+</div>
+
+<div class="filters">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="expense">Expenses</button>
+    <button class="filter-btn" data-filter="income">Income</button>
+</div>
+
+<div class="summary">
+    <div class="summary-card">
+        <p>Total Income</p>
+        <h3 class="income" id="total-income">₹0.00</h3>
+    </div>
+
+    <div class="summary-card">
+        <p>Total Expenses</p>
+        <h3 class="expense" id="total-expenses">₹0.00</h3>
+    </div>
+</div>
+
+<h2>All Transactions</h2>
+
+<p class="subtitle" id="count">Loading transactions...</p>
+
+<div id="transactions-container">
+    <div id="message">Loading your transactions...</div>
+</div>
+
+<nav class="bottom-nav">
+    <a href="dashboard.html">Home</a>
+    <a href="transaction_history.html">History</a>
+    <a href="add_transaction.html">+ Add</a>
+    <a href="analytics.html">Insights</a>
+    <a href="budgets.html">Budgets</a>
+</nav>
+
+<script>
+const API = "http://localhost:8080";
+
+const token = sessionStorage.getItem("authToken");
+
+let transactions = [];
+let activeFilter = "all";
+
+if (!token) {
+    window.location.href = "login.html";
+}
+
+function formatMoney(amount) {
+    return "₹" + Number(amount || 0).toLocaleString("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
+function normalizeType(type) {
+    return String(type || "").toLowerCase();
+}
+
+function getTitle(t) {
+    return t.title || t.description || "Transaction";
+}
+
+function getAmount(t) {
+    return Number(t.amount || 0);
+}
+
+function getCategory(t) {
+    return t.category || "Other";
+}
+
+function renderTransactions() {
+    const container = document.getElementById("transactions-container");
+    const search = document.getElementById("search").value
+        .toLowerCase().trim();
+
+    let filtered = transactions.filter(t => {
+        const type = normalizeType(t.type);
+
+        const matchesType =
+            activeFilter === "all" || type === activeFilter;
+
+        const searchableText =
+            (getTitle(t) + " " + getCategory(t) + " " +
+             getAmount(t)).toLowerCase();
+
+        const matchesSearch = searchableText.includes(search);
+
+        return matchesType && matchesSearch;
+    });
+
+    const sort = document.getElementById("sort").value;
+
+    if (sort === "highest") {
+        filtered.sort((a, b) => getAmount(b) - getAmount(a));
+    } else if (sort === "lowest") {
+        filtered.sort((a, b) => getAmount(a) - getAmount(b));
+    } else if (sort === "oldest") {
+        filtered.sort((a, b) => Number(a.id || 0) - Number(b.id || 0));
+    } else {
+        filtered.sort((a, b) => Number(b.id || 0) - Number(a.id || 0));
+    }
+
+    container.replaceChildren();
+
+    document.getElementById("count").textContent =
+        filtered.length + " transaction(s) found";
+
+    if (filtered.length === 0) {
+        const message = document.createElement("div");
+        message.id = "message";
+        message.textContent = transactions.length === 0
+            ? "You haven't added any transactions yet."
+            : "No transactions match your search.";
+        container.appendChild(message);
+        return;
+    }
+
+    filtered.forEach(t => {
+        const type = normalizeType(t.type);
+        const isIncome = type === "income";
+
+        const card = document.createElement("div");
+        card.className = "transaction";
+
+        const details = document.createElement("div");
+
+        const title = document.createElement("h3");
+        title.textContent = getTitle(t);
+
+        const category = document.createElement("p");
+        category.textContent = getCategory(t) + " • " +
+            (isIncome ? "Income" : "Expense");
+
+        details.appendChild(title);
+        details.appendChild(category);
+
+        const amount = document.createElement("div");
+        amount.className = "amount " +
+            (isIncome ? "income" : "expense");
+
+        amount.textContent =
+            (isIncome ? "+" : "-") + formatMoney(getAmount(t));
+
+        card.appendChild(details);
+        card.appendChild(amount);
+        container.appendChild(card);
+    });
+}
+
+async function loadTransactions() {
+    if (!token) return;
+
+    try {
+        const response = await fetch(API + "/transactions", {
+            method: "GET",
+            headers: {
+                "Authorization": "Bearer " + token
+            }
+        });
+
+        if (response.status === 401) {
+            sessionStorage.clear();
+            window.location.href = "login.html";
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error("Could not load transactions.");
+        }
+
+        const data = await response.json();
+
+        // Supports either an array or { transactions: [...] }
+        transactions = Array.isArray(data)
+            ? data
+            : (data.transactions || []);
+
+        const income = transactions
+            .filter(t => normalizeType(t.type) === "income")
+            .reduce((sum, t) => sum + getAmount(t), 0);
+
+        const expenses = transactions
+            .filter(t => normalizeType(t.type) === "expense")
+            .reduce((sum, t) => sum + getAmount(t), 0);
+
+        document.getElementById("total-income").textContent =
+            formatMoney(income);
+
+        document.getElementById("total-expenses").textContent =
+            formatMoney(expenses);
+
+        renderTransactions();
+
+    } catch (error) {
+        document.getElementById("transactions-container").textContent =
+            "Unable to load transactions. Check that your Java server is running.";
+        document.getElementById("count").textContent = "";
+        console.error(error);
+    }
+}
+
+document.getElementById("search").addEventListener(
+    "input", renderTransactions
+);
+
+document.getElementById("sort").addEventListener(
+    "change", renderTransactions
+);
+
+document.querySelectorAll("[data-filter]").forEach(button => {
+    button.addEventListener("click", () => {
+        activeFilter = button.dataset.filter;
+
+        document.querySelectorAll("[data-filter]").forEach(btn => {
+            btn.classList.toggle("active", btn === button);
+        });
+
+        renderTransactions();
+    });
+});
+
+document.getElementById("export").addEventListener("click", () => {
+    if (transactions.length === 0) {
+        alert("There are no transactions to export.");
+        return;
+    }
+
+    const rows = [
+        ["Title", "Category", "Type", "Amount"],
+        ...transactions.map(t => [
+            getTitle(t),
+            getCategory(t),
+            t.type || "",
+            getAmount(t)
+        ])
+    ];
+
+    const csv = rows.map(row =>
+        row.map(value =>
+            '"' + String(value).replace(/"/g, '""') + '"'
+        ).join(",")
+    ).join("\r\n");
+
+    const blob = new Blob(["\uFEFF" + csv], {
+        type: "text/csv;charset=utf-8;"
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = "spendly_transactions.csv";
+    link.click();
+
+    URL.revokeObjectURL(url);
+});
+
+loadTransactions();
+</script>
+
+</body>
+</html>

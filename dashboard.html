@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spendly - Dashboard</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 20px 20px 100px;
+      font-family: Arial, sans-serif;
+      background: #f9f9f7;
+      color: #1a1c1b;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+    }
+
+    h1 {
+      color: #163428;
+      margin: 0;
+    }
+
+    .balance {
+      background: #163428;
+      color: white;
+      padding: 24px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+
+    .amount {
+      font-size: 32px;
+      font-weight: bold;
+      margin: 15px 0;
+      overflow-wrap: anywhere;
+    }
+
+    .summary {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .card {
+      background: white;
+      padding: 18px;
+      border-radius: 16px;
+      margin: 15px 0;
+      box-shadow: 0 2px 8px #0000000d;
+    }
+
+    button {
+      border: none;
+      background: #163428;
+      color: white;
+      padding: 12px 18px;
+      border-radius: 25px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #245b46;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 20px 0;
+    }
+
+    a {
+      color: #245b46;
+      text-decoration: none;
+    }
+
+    nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: white;
+      box-shadow: 0 -2px 10px #00000012;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 12px 4px;
+    }
+
+    nav a {
+      font-size: 12px;
+      text-align: center;
+      padding: 8px 4px;
+    }
+
+    .plus {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      font-size: 30px;
+      padding: 0;
+    }
+
+    .transaction {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 0;
+      border-bottom: 1px solid #eeeeee;
+    }
+
+    .transaction:last-child {
+      border-bottom: none;
+    }
+
+    .transaction-title {
+      overflow-wrap: anywhere;
+    }
+
+    .income-amount {
+      color: #16803d;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    .expense-amount {
+      color: #c0392b;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    .message {
+      color: #666;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>Spendly</h1>
+    <div>
+      <a href="profile.html">Profile</a>
+      &nbsp; | &nbsp;
+      <button onclick="logout()">Logout</button>
+    </div>
+  </header>
+
+  <section class="balance">
+    <p>Available Balance</p>
+
+    <div class="amount" id="balance">Loading...</div>
+
+    <div class="summary">
+      <div>
+        Income<br>
+        <strong id="income">Loading...</strong>
+      </div>
+
+      <div>
+        Spent<br>
+        <strong id="expenses">Loading...</strong>
+      </div>
+
+      <div>
+        Saved<br>
+        <strong id="saved">Loading...</strong>
+      </div>
+    </div>
+  </section>
+
+  <section class="actions">
+    <button onclick="location.href='add_transaction.html'">
+      + Quick Add
+    </button>
+
+    <button onclick="location.href='budgets.html'">
+      Set Budget
+    </button>
+
+    <button onclick="location.href='analytics.html'">
+      Monthly Report
+    </button>
+  </section>
+
+  <section class="card">
+    <h3>Monthly Budget</h3>
+    <p>₹6,350 left of ₹20,000</p>
+    <progress value="68" max="100" style="width:100%"></progress>
+  </section>
+
+  <section class="card">
+    <h3>Recent Transactions</h3>
+
+    <div id="recentTransactions">
+      <p class="message">Loading transactions...</p>
+    </div>
+
+    <p>
+      <a href="transaction_history.html">
+        See All Transactions →
+      </a>
+    </p>
+  </section>
+
+  <section class="card">
+    <h3>Category Breakdown</h3>
+
+    <p class="message">
+      Category breakdown will be available after connecting the analytics page.
+    </p>
+
+    <button onclick="location.href='analytics.html'">
+      View Insights
+    </button>
+  </section>
+
+  <nav>
+    <a href="dashboard.html">⌂<br>Home</a>
+
+    <a href="transaction_history.html">▤<br>History</a>
+
+    <button class="plus"
+      aria-label="Quick Add"
+      onclick="location.href='add_transaction.html'">+</button>
+
+    <a href="analytics.html">▥<br>Insights</a>
+
+    <a href="budgets.html">◉<br>Budgets</a>
+  </nav>
+
+  <script>
+    const API_URL = 'http://localhost:8080';
+
+    const token = sessionStorage.getItem('authToken');
+
+    // Check whether the user is logged in.
+    if (!token) {
+      alert('Please log in first.');
+      window.location.href = 'login.html';
+    }
+
+    // Send the login token to the Java backend.
+    async function apiRequest(endpoint) {
+      const response = await fetch(API_URL + endpoint, {
+        method: 'GET',
+        headers: {
+          'Authorization': 'Bearer ' + token
+        }
+      });
+
+      if (response.status === 401) {
+        sessionStorage.clear();
+        alert('Your session has expired. Please log in again.');
+        window.location.href = 'login.html';
+        throw new Error('Unauthorized');
+      }
+
+      if (!response.ok) {
+        throw new Error('Request failed: ' + response.status);
+      }
+
+      return await response.json();
+    }
+
+    // Load income, expenses and balance from MySQL.
+    async function loadSummary() {
+      try {
+        const data = await apiRequest('/summary');
+
+        const income = Number(data.income) || 0;
+        const expenses = Number(data.expenses) || 0;
+        const balance = income - expenses;
+
+        document.getElementById('income').textContent =
+          '₹' + income.toFixed(2);
+
+        document.getElementById('expenses').textContent =
+          '₹' + expenses.toFixed(2);
+
+        document.getElementById('balance').textContent =
+          '₹' + balance.toFixed(2);
+
+        document.getElementById('saved').textContent =
+          '₹' + balance.toFixed(2);
+
+      } catch (error) {
+        console.error('Summary error:', error);
+
+        if (error.message !== 'Unauthorized') {
+          document.getElementById('balance').textContent =
+            'Unable to load';
+
+          document.getElementById('income').textContent =
+            'Unavailable';
+
+          document.getElementById('expenses').textContent =
+            'Unavailable';
+
+          document.getElementById('saved').textContent =
+            'Unavailable';
+        }
+      }
+    }
+
+    // Load the user's recent transactions from MySQL.
+    async function loadTransactions() {
+      const container =
+        document.getElementById('recentTransactions');
+
+      try {
+        const data = await apiRequest('/transactions');
+
+        // Accept either a JSON array or an object containing transactions.
+        const transactions = Array.isArray(data)
+          ? data
+          : (data.transactions || []);
+
+        container.innerHTML = '';
+
+        if (transactions.length === 0) {
+          container.innerHTML =
+            '<p class="message">No transactions yet. Add your first transaction!</p>';
+          return;
+        }
+
+        // Display up to three recent transactions.
+        transactions.slice(0, 3).forEach(function(transaction) {
+          const row = document.createElement('div');
+          row.className = 'transaction';
+
+          const title = document.createElement('span');
+          title.className = 'transaction-title';
+          title.textContent = transaction.title || 'Transaction';
+
+          const amount = document.createElement('strong');
+
+          const type = String(transaction.type || '').toLowerCase();
+          const isIncome = type === 'income';
+
+          amount.textContent =
+            (isIncome ? '+' : '-') +
+            '₹' +
+            (Number(transaction.amount) || 0).toFixed(2);
+
+          amount.className = isIncome
+            ? 'income-amount'
+            : 'expense-amount';
+
+          row.appendChild(title);
+          row.appendChild(amount);
+          container.appendChild(row);
+        });
+
+      } catch (error) {
+        console.error('Transactions error:', error);
+
+        if (error.message !== 'Unauthorized') {
+          container.innerHTML =
+            '<p class="message">Unable to load transactions.</p>';
+        }
+      }
+    }
+
+    // Log out the current user.
+    async function logout() {
+      try {
+        await fetch(API_URL + '/logout', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + token
+          }
+        });
+      } catch (error) {
+        console.error('Logout error:', error);
+      }
+
+      sessionStorage.clear();
+      window.location.href = 'login.html';
+    }
+
+    // Load dashboard information.
+    if (token) {
+      loadSummary();
+      loadTransactions();
+    }
+  </script>
+
+</body>
+</html>
